@@ -49,16 +49,29 @@ function App() {
   const videoRef = useRef(null)
   const streamRef = useRef(null)
 
-async function startCamera() {
+async function startCamera(facingMode = 'environment') {
   setCameraOn(true)
   setResult(null)
   setImage(null)
   setTimeout(async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode }
+    })
     streamRef.current = stream
     videoRef.current.srcObject = stream
   }, 100)
 }
+
+async function switchCamera() {
+  const currentFacing = streamRef.current
+    ?.getVideoTracks()[0]
+    ?.getSettings().facingMode
+  stopCamera()
+  setTimeout(() => {
+    startCamera(currentFacing === 'environment' ? 'user' : 'environment')
+  }, 300)
+}
+
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -160,6 +173,7 @@ async function startCamera() {
             borderRadius: '16px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
           }} />
+          <div style={{ display: 'flex', gap: '12px' }}>
           <button onClick={takePhoto} style={{
             background: '#16a34a',
             color: 'white',
@@ -171,8 +185,20 @@ async function startCamera() {
           }}>
             📸 拍照分析
           </button>
+          <button onClick={switchCamera} style={{
+            background: '#6b7280',
+            color: 'white',
+            padding: '14px 20px',
+            borderRadius: '999px',
+            fontSize: '1.1rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}>
+            🔄
+          </button>
         </div>
-      )}
+                </div>
+              )}
 
       {image && !cameraOn && (
         <img src={image} style={{
